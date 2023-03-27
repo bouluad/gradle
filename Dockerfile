@@ -1,27 +1,28 @@
 FROM centos:latest
-LABEL maintainer="Your Name <your.email@domain.com>"
+LABEL maintainer="Your Name <your_email@example.com>"
 
-# Install dependencies
+# Update packages and install required packages
 RUN yum -y update && \
-    yum -y install java-1.8.0-openjdk-devel wget && \
-    yum clean all
+    yum -y install wget unzip java-1.8.0-openjdk-devel
 
-# Install Gradle
-ENV GRADLE_VERSION 7.1.1
-RUN wget https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip && \
-    mkdir /opt/gradle && \
-    unzip -d /opt/gradle gradle-${GRADLE_VERSION}-bin.zip && \
-    rm gradle-${GRADLE_VERSION}-bin.zip
-ENV PATH="${PATH}:/opt/gradle/gradle-${GRADLE_VERSION}/bin"
+# Set Gradle version and download URL
+ARG GRADLE_VERSION=7.3.3
+ARG GRADLE_DOWNLOAD_URL=https://services.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip
 
-# Set working directory
-WORKDIR /app
+# Download and install Gradle
+RUN wget -q ${GRADLE_DOWNLOAD_URL} && \
+    unzip -qo gradle-${GRADLE_VERSION}-bin.zip -d /opt && \
+    rm -f gradle-${GRADLE_VERSION}-bin.zip
 
-# Copy application code
-COPY . .
+# Set Gradle environment variables
+ENV GRADLE_HOME=/opt/gradle-${GRADLE_VERSION}
+ENV PATH=${PATH}:${GRADLE_HOME}/bin
 
-# Build application
-RUN gradle build
+# Install Jenkins plugins (if needed)
+# RUN /usr/local/bin/install-plugins.sh plugin1 plugin2 ...
 
-# Run application
-CMD ["gradle", "run"]
+# Set the working directory to /home/jenkins
+WORKDIR /home/jenkins
+
+# Start a shell by default when launching the container
+CMD ["/bin/bash"]
